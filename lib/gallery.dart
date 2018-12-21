@@ -59,8 +59,8 @@ class MyGalleryState extends State<MyGalleryPage>{
     print(response.body);
 
     setState((){
-      var extractdata = json.decode(response.body);
-      data = extractdata["data"];
+      var extractData = json.decode(response.body);
+      data = extractData["data"];
     }) ;
     print(response.body);
   }
@@ -111,17 +111,17 @@ class ShowImage extends StatelessWidget {
       itemCount: data.length,
       itemBuilder: (context, index) {
         return Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: EdgeInsets.all(2.0),
             child: Container(
-              width: 150.0,
-              height: 150.0,
+              width: 10.0,
+              height: 10.0,
               decoration: BoxDecoration(
                 border: Border.all(width: 2.0,color: Colors.blue),
               ),
               child: Image.network(
                 connectUrl+data[index]["image"]["contentUrl"],
-                width: 150,
-                height: 150,
+                width: 10.0,
+                height: 10.0,
               ),
             )
 
