@@ -1,80 +1,107 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import './my_strings.dart';
-import 'package:http/http.dart' as http;
-
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:async/async.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:webant_flutter/item_gallery_list.dart';
+import 'package:webant_flutter/movie_status.dart';
+import 'package:webant_flutter/popup.dart';
+
+import './my_strings.dart';
 
 Future<String> fetchPhotos(http.Client client) async {
   final response =
   await client.get('https://jsonplaceholder.typicode.com/photos');
 
-  // Use the compute function to run parsePhotos in a separate isolate
   return compute(parsePhotos, response.body);
 }
 
-// A function that will convert a response body into a List<Photo>
 String parsePhotos(String responseBody) {
   final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
 
   return parsed.map<String>((json) => json);
 }
+class NewGallery extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => NewGalleryPageState();
 
+}
 
-// ignore: must_be_immutable
-class NewGalleryPage extends StatelessWidget {
+class NewGalleryPageState extends State<NewGallery> {
 
+  MovieLoadMoreStatus loadMoreStatus = MovieLoadMoreStatus.STABLE;
+  final ScrollController scrollController = new ScrollController();
+  static const String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w185";
+  List<ItemGalleryList> listItem;
+  int currentPageNumber;
+  CancelableOperation movieOperation;
 //
   List data = [];
-  final bool show=true;
-  // ignore: missing_return
-  Future<String> makeRequest() async {
+  final bool show = true;
 
+
+  Future<List> makeRequest(String url) async {
     final response = await http
-        .get(Uri.encodeFull(MyStrings.newGalleryUrl), headers: {"Accept": "application/json"});
-    await refreshGallery();
+        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
+
     print(response.body);
     var extractData = json.decode(response.body);
     data = extractData["data"];
-
-//    setState((){
-//      var extractData = json.decode(response.body);
-//      data = extractData["data"];
-//    }) ;
-//    print(response.body);
-
+    return data;
   }
-  var refreshKey = GlobalKey<RefreshIndicatorState>();
-//
+
+ @override
+  void initState() {
+    moreImage("http://gallery.dev.webant.ru/api/photos?new=true&page=2&limit=6");
+    super.initState();
+    ShowImage(data: data);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(MyStrings.newPage,style: TextStyle(color: Color(0xff2f1767),fontSize: 30.0),),
+        title: Text(MyStrings.newPage,
+          style: TextStyle(color: Color(0xff2f1767), fontSize: 30.0),),
       ),
       body: RefreshIndicator(
-        key: refreshKey,
         onRefresh: refreshGallery,
         child: FutureBuilder(
-          future:   makeRequest(),
+          future: makeRequest(MyStrings.newGalleryUrl),
           builder: (context, snapshot) {
-            if (snapshot.hasError) print(snapshot.error);
-            return ShowImage(data: data);
+            if (snapshot.hasError){
+              print("${snapshot.error} not connect ");
+              return Center(child: Image.asset("assets/not_connect.png"));}
+              else return ShowImage(data: data);
           },
         ),
-      )
+      ),
     );
   }
 
+
   Future<Null> refreshGallery() async {
-    refreshKey.currentState?.show(atTop: true);
     await Future.delayed(Duration(milliseconds: 2500));
 
     return null;
   }
+
+  Future<List> moreImage(String url) async {
+    final response = await http
+        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
+    print(response.body);
+    var extractData = json.decode(response.body);
+    data = extractData["data"];
+    return data;
+  }
+
+
 }
+
 
 class ShowImage extends StatelessWidget {
   final List data;
@@ -83,100 +110,40 @@ class ShowImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-        ),
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: EdgeInsets.all(6.0),
-            child: SizedBox(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+      ),
+      itemCount: data.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: EdgeInsets.all(6.0),
+          child: SizedBox(
 //            width: 10.0,
 //            height: 190.0,
-              child: GestureDetector(
-                onTap: (){
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                          new Popup(data[index])
-                      )
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15.0),
+            child: GestureDetector(
+              onTap: (){
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                        new Popup(data[index])
+                    )
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15.0),
                     image: DecorationImage(
-                        image: NetworkImage(MyStrings.connectUrl+data[index]["image"]["contentUrl"],),
+                        image: CachedNetworkImageProvider(MyStrings.connectUrl+data[index]["image"]["contentUrl"],),
                         fit: BoxFit.fitHeight
                     )
-                  ),
                 ),
               ),
             ),
-          );
-        },
+          ),
+        );
+      },
     );
   }
 
-}
-
-class Popup extends StatelessWidget{
-  Popup(this.data);
-  final data;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(data["name"]),
-    ),
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          height: 210.0,
-          decoration: BoxDecoration(
-            color: Color(0xff7c94b6),
-            image: DecorationImage(
-              image: NetworkImage(MyStrings.connectUrl+data["image"]["contentUrl"],),
-              fit: BoxFit.fitWidth,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 50.0,
-          child: Padding(
-            padding: EdgeInsets.only(
-                top: 45.0,
-                left: 25.0,
-                right: 25.0
-            ),
-            child: Text(
-              data["name"],
-              style: TextStyle(
-                color: Colors.purple,
-                fontSize: 24.0
-              ),
-              textAlign: TextAlign.left,),
-          ),
-        ),
-        SizedBox(
-          height: 50.0,
-          child: Padding(
-            padding: EdgeInsets.only(
-                top: 65.0,
-                left: 25.0,
-                right: 25.0
-            ),
-            child: Text(
-              data["description"],
-              style: TextStyle(
-                  color: Colors.purple,
-                  fontSize: 18.0
-              ),
-              textAlign: TextAlign.left,),
-          ),
-        ),
-      ],
-    ),
-  );
 }

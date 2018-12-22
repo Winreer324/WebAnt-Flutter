@@ -1,21 +1,18 @@
 class ItemGallery {
 
-  final String urlImg;
-  final String name;
-  final String description;
+  ItemGallery({
+    this.name,
+    this.description,
+    this.contentUrl
+  });
 
-  ItemGallery(this.urlImg, this.name,this.description);
+  final String name, description, contentUrl;
 
-
-  ItemGallery.fromJson(Map<String, dynamic> json)
-      : urlImg = json['contentUrl'],
-        name = json['name'],
-        description = json['description'];
-
-  Map<String, dynamic> toJson() =>
-      {
-        'contentUrl': urlImg,
-        'name': name,
-        'description': description,
-      };
+  factory ItemGallery.fromJson(Map value) {
+    return ItemGallery(
+        name: value['name'],
+        description: value['description'],
+        contentUrl: value['contentUrl'],
+    );
+  }
 }

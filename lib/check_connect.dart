@@ -8,6 +8,6 @@ class CheckConnect extends StatefulWidget {
 class _CheckConnectState extends State<CheckConnect> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Center(child: Image.asset("assets/not_connect.png"));
   }
 }

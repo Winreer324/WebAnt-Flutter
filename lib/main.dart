@@ -4,7 +4,6 @@ import './my_strings.dart';
 import './new_gallery_page.dart' as newPage;
 import './popular_gallery_page.dart' as popularPage;
 
-
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -34,8 +33,8 @@ class MyGalleryState extends State<MyGalleryPage> with SingleTickerProviderState
 
   @override
   void dispose() {
-    super.dispose();
     controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -62,21 +61,22 @@ class MyGalleryState extends State<MyGalleryPage> with SingleTickerProviderState
       body: TabBarView(
         controller: controller,
         children: <Widget>[
-          newPage.NewGalleryPage(),
-          popularPage.PopularGalleryPage(),
+          newPage.NewGallery(),
+          popularPage.PopularGallery(),
         ],
       ),
     );
   }
+
 }
 
-// todo сделать pool refresh;
-// todo check connect;
-// todo result connect;
+// todo сделать pool refresh; complete
+// todo check connect; complete +- (переделать)
+// todo result connect; complete +- (переделать)
 // todo pagination;
-// todo cash image;
+// todo cash image; complete +- (не уверен)
 // todo more details ui;
+
 // //todo мб переделать как тут https://flutter.io/docs/cookbook/networking/background-parsing
 // contact list пример
 // todo исправить и понять почему миллион запросов отправляется
-

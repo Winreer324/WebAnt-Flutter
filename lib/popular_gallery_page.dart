@@ -1,10 +1,12 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import './my_strings.dart';
-import 'package:http/http.dart' as http;
-
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:webant_flutter/show_image.dart';
+
+import './my_strings.dart';
 
 Future<String> fetchPhotos(http.Client client) async {
   final response =
@@ -21,18 +23,21 @@ String parsePhotos(String responseBody) {
   return parsed.map<String>((json) => json);
 }
 
+class PopularGallery extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => PopularGalleryPageState();
 
-// ignore: must_be_immutable
-class PopularGalleryPage extends StatelessWidget {
+}
+
+class PopularGalleryPageState extends State<PopularGallery> {
 
   List data = [];
   final bool show = true;
-  // ignore: missing_return
-  Future<String> makeRequest() async {
 
+  Future<List> makeRequest() async {
     final response = await http
         .get(Uri.encodeFull(MyStrings.popularGalleryUrl), headers: {"Accept": "application/json"});
-    await refreshGallery();
+
     print(response.body);
     var extractData = json.decode(response.body);
     data = extractData["data"];
@@ -42,6 +47,7 @@ class PopularGalleryPage extends StatelessWidget {
 //    }) ;
 //    print(response.body);
 //    refreshGallery();
+    return data;
   }
   var refreshKey = GlobalKey<RefreshIndicatorState>();
 
@@ -58,8 +64,11 @@ class PopularGalleryPage extends StatelessWidget {
           child: FutureBuilder(
             future:   makeRequest(),
             builder: (context, snapshot) {
-              if (snapshot.hasError) print(snapshot.error);
-              return ShowImage(data: data);
+              if (snapshot.hasError) {
+                print("${snapshot.error} not connect ");
+                return Center(child: Image.asset("assets/not_connect.png"));
+              }
+              else return ShowImage(data: data);
             },
           ),
         )
@@ -69,114 +78,7 @@ class PopularGalleryPage extends StatelessWidget {
   Future<Null> refreshGallery() async {
     refreshKey.currentState?.show();
     await Future.delayed(Duration(milliseconds: 2500));
-//    setState(() {
-//
-//    });
+
     return null;
   }
-}
-
-class ShowImage extends StatelessWidget {
-  final List data;
-
-  ShowImage({Key key, this.data}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return    GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-        ),
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: EdgeInsets.all(6.0),
-            child: SizedBox(
-//            width: 10.0,
-//            height: 190.0,
-              child: GestureDetector(
-                onTap: (){
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                          new Popup(data[index])
-                      )
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15.0),
-                      image: DecorationImage(
-                          image: NetworkImage(MyStrings.connectUrl+data[index]["image"]["contentUrl"],),
-                          fit: BoxFit.fitHeight
-                      )
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-    );
-  }
-
-}
-
-class Popup extends StatelessWidget{
-  Popup(this.data);
-  final data;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(data["name"]),
-    ),
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          height: 210.0,
-          decoration: BoxDecoration(
-            color: Color(0xff7c94b6),
-            image: DecorationImage(
-              image: NetworkImage(MyStrings.connectUrl+data["image"]["contentUrl"],),
-              fit: BoxFit.fitWidth,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 50.0,
-          child: Padding(
-            padding: EdgeInsets.only(
-                top: 45.0,
-                left: 25.0,
-                right: 25.0
-            ),
-            child: Text(
-              data["name"],
-              style: TextStyle(
-                  color: Colors.purple,
-                  fontSize: 24.0
-              ),
-              textAlign: TextAlign.left,),
-          ),
-        ),
-        SizedBox(
-          height: 50.0,
-          child: Padding(
-            padding: EdgeInsets.only(
-                top: 65.0,
-                left: 25.0,
-                right: 25.0
-            ),
-            child: Text(
-              data["description"],
-              style: TextStyle(
-                  color: Colors.purple,
-                  fontSize: 18.0
-              ),
-              textAlign: TextAlign.left,),
-          ),
-        ),
-      ],
-    ),
-  );
 }
