@@ -1,14 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:async/async.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:webant_flutter/item_gallery_list.dart';
-import 'package:webant_flutter/movie_status.dart';
-import 'package:webant_flutter/popup.dart';
+import 'package:webant_flutter/show_image.dart';
 
 import './my_strings.dart';
 
@@ -27,38 +23,99 @@ String parsePhotos(String responseBody) {
 class NewGallery extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => NewGalleryPageState();
-
 }
 
 class NewGalleryPageState extends State<NewGallery> {
-
-  MovieLoadMoreStatus loadMoreStatus = MovieLoadMoreStatus.STABLE;
-  final ScrollController scrollController = new ScrollController();
-  static const String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w185";
-  List<ItemGalleryList> listItem;
-  int currentPageNumber;
-  CancelableOperation movieOperation;
+  ScrollController _scrollController = ScrollController();
+  String lol = MyStrings.newGalleryUrl;
 //
   List data = [];
-  final bool show = true;
+  bool show = true;
+  int countP = 1;
 
+  @override
+  void initState(){
+    super.initState();
+    _scrollController.addListener((){
+//      print(_scrollController.position.pixels);
+      if(_scrollController.position.pixels == _scrollController.position.maxScrollExtent){
+        if(countP<2){
+          moreImage();
+//            show=false;
+          countP++;
+        }
+      }
+    });
+  }
+
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+//
+  bool checkConnect(AsyncSnapshot snapshot){
+    bool check = false;
+    if (snapshot.hasError){
+      print("${snapshot.error} ${MyStrings.newPage} not connect ");check = false;
+    }
+    if (snapshot.hasData){
+      print("${snapshot.hasData} ${MyStrings.newPage} good connect ");check = true;
+    }
+    return check;
+  }
+
+  Future<Null> refreshGallery() async {
+    await Future.delayed(Duration(milliseconds: 2500));
+
+    return null;
+  }
 
   Future<List> makeRequest(String url) async {
     final response = await http
         .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
+    print("url = $url");
+    if(response.statusCode == 200){
 
-    print(response.body);
-    var extractData = json.decode(response.body);
-    data = extractData["data"];
+      var extractData = json.decode(response.body)["data"];
+      for(var val in extractData){
+        print(val);
+        this.data.add(val);
+      }
+
+    }
+    else {throw Exception("Failed to load json ${MyStrings.newPage}");}
+
     return data;
   }
 
- @override
-  void initState() {
-    moreImage("http://gallery.dev.webant.ru/api/photos?new=true&page=2&limit=6");
-    super.initState();
-    ShowImage(data: data);
+  moreImage()  {
+//    final response = await http
+//        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
+//
+//      print("more = "+response.body);
+//      var extractData = json.decode(response.body)["data"];
+//
+//      print("before data = ${data.toString()}");
+//      print("extractData = ${extractData.toString()}");
+
+    setState(() {
+//        for(var val in data){
+//          print("data $val");
+////          data.add(val);
+//        }
+//      if(countP==2){lol = MyStrings.newGalleryUrlTwoPage;}
+//      if(countP==3){lol = MyStrings.newGalleryUrlThreePage;}
+      lol = MyStrings.newGalleryUrlThreePage;
+    });
+//      print("after data = ${data.toString()}");
+//      print(data.toString());
+
+    ShowImage(data: data,scrollController: _scrollController,);
+    print(data.length);
   }
+//
 
   @override
   Widget build(BuildContext context) {
@@ -71,79 +128,16 @@ class NewGalleryPageState extends State<NewGallery> {
       body: RefreshIndicator(
         onRefresh: refreshGallery,
         child: FutureBuilder(
-          future: makeRequest(MyStrings.newGalleryUrl),
+          future: makeRequest(lol),
           builder: (context, snapshot) {
-            if (snapshot.hasError){
-              print("${snapshot.error} not connect ");
-              return Center(child: Image.asset("assets/not_connect.png"));}
-              else return ShowImage(data: data);
+//          if (!checkConnect(snapshot)) {
+            if (snapshot.hasError) {
+              return Center(child: Image.asset("assets/not_connect.png"));
+            }
+            else return ShowImage(data: data,scrollController: _scrollController,);
           },
         ),
       ),
     );
   }
-
-
-  Future<Null> refreshGallery() async {
-    await Future.delayed(Duration(milliseconds: 2500));
-
-    return null;
-  }
-
-  Future<List> moreImage(String url) async {
-    final response = await http
-        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
-    print(response.body);
-    var extractData = json.decode(response.body);
-    data = extractData["data"];
-    return data;
-  }
-
-
-}
-
-
-class ShowImage extends StatelessWidget {
-  final List data;
-
-  ShowImage({Key key, this.data}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-      ),
-      itemCount: data.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: EdgeInsets.all(6.0),
-          child: SizedBox(
-//            width: 10.0,
-//            height: 190.0,
-            child: GestureDetector(
-              onTap: (){
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) =>
-                        new Popup(data[index])
-                    )
-                );
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15.0),
-                    image: DecorationImage(
-                        image: CachedNetworkImageProvider(MyStrings.connectUrl+data[index]["image"]["contentUrl"],),
-                        fit: BoxFit.fitHeight
-                    )
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
 }

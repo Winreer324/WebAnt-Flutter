@@ -73,8 +73,8 @@ class MyGalleryState extends State<MyGalleryPage> with SingleTickerProviderState
 // todo сделать pool refresh; complete
 // todo check connect; complete +- (переделать)
 // todo result connect; complete +- (переделать)
-// todo pagination;
-// todo cash image; complete +- (не уверен)
+// todo pagination; complete +- (переделать)
+// todo cache image; complete +- (не уверен)
 // todo more details ui;
 
 // //todo мб переделать как тут https://flutter.io/docs/cookbook/networking/background-parsing

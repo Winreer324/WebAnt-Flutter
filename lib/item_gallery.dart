@@ -5,7 +5,6 @@ class ItemGallery {
     this.description,
     this.contentUrl
   });
-
   final String name, description, contentUrl;
 
   factory ItemGallery.fromJson(Map value) {

@@ -5,11 +5,13 @@ import 'package:webant_flutter/popup.dart';
 
 class ShowImage extends StatelessWidget {
   final List data;
+  final ScrollController scrollController;
 
-  ShowImage({Key key, this.data}) : super(key: key);
+  ShowImage({Key key,Key key2, this.data,this.scrollController}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      controller: scrollController,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
       ),

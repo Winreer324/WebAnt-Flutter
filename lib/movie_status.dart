@@ -1,1 +1,0 @@
-enum MovieLoadMoreStatus { LOADING, STABLE }

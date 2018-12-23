@@ -12,11 +12,9 @@ Future<String> fetchPhotos(http.Client client) async {
   final response =
   await client.get('https://jsonplaceholder.typicode.com/photos');
 
-  // Use the compute function to run parsePhotos in a separate isolate
   return compute(parsePhotos, response.body);
 }
 
-// A function that will convert a response body into a List<Photo>
 String parsePhotos(String responseBody) {
   final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
 
@@ -30,55 +28,99 @@ class PopularGallery extends StatefulWidget {
 }
 
 class PopularGalleryPageState extends State<PopularGallery> {
+  ScrollController _scrollController = ScrollController();
+  String connectUrl = MyStrings.popularGalleryUrl;
 
   List data = [];
-  final bool show = true;
+  bool show = true;
+  int countP = 1;
 
-  Future<List> makeRequest() async {
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        if (countP < 2) {
+          moreImage();
+          countP++;
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  bool checkConnect(AsyncSnapshot snapshot) {
+    bool check = false;
+    if (snapshot.hasError) {
+      print("${snapshot.error} ${MyStrings.popularPage} not connect ");
+      check = false;
+    }
+    if (snapshot.hasData) {
+      print("${snapshot.hasData} ${MyStrings.popularPage} good connect ");
+      check = true;
+    }
+    return check;
+  }
+
+  Future<Null> refreshGallery() async {
+    await Future.delayed(Duration(milliseconds: 2500));
+
+    return null;
+  }
+
+  Future<List> makeRequest(String url) async {
     final response = await http
-        .get(Uri.encodeFull(MyStrings.popularGalleryUrl), headers: {"Accept": "application/json"});
+        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
+    print("url = $url");
+    if (response.statusCode == 200) {
+      var extractData = json.decode(response.body)["data"];
+      for (var val in extractData) {
+        print(val);
+        this.data.add(val);
+      }
+    }
+    else {
+      throw Exception("Failed to load json ${MyStrings.popularPage}");
+    }
 
-    print(response.body);
-    var extractData = json.decode(response.body);
-    data = extractData["data"];
-//    setState((){
-//      var extractdata = json.decode(response.body);
-//      data = extractdata["data"];
-//    }) ;
-//    print(response.body);
-//    refreshGallery();
     return data;
   }
-  var refreshKey = GlobalKey<RefreshIndicatorState>();
+
+  moreImage() {
+    setState(() {
+      connectUrl = MyStrings.popularGalleryUrlThreePage;
+    });
+
+    ShowImage(data: data, scrollController: _scrollController,);
+    print(data.length);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: Text(MyStrings.popularPage,style: TextStyle(color: Color(0xff2f1767),fontSize: 30.0),),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Text(MyStrings.popularPage,
+          style: TextStyle(color: Color(0xff2f1767), fontSize: 30.0),),
+      ),
+      body: RefreshIndicator(
+        onRefresh: refreshGallery,
+        child: FutureBuilder(
+          future: makeRequest(connectUrl),
+          builder: (context, snapshot) {
+//            if (!checkConnect(snapshot)) {
+            if (snapshot.hasError) {
+              return Center(child: Image.asset("assets/not_connect.png"));
+            }  else return ShowImage(data: data, scrollController: _scrollController,);
+          },
         ),
-        body: RefreshIndicator(
-          key: refreshKey,
-          onRefresh: refreshGallery,
-          child: FutureBuilder(
-            future:   makeRequest(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                print("${snapshot.error} not connect ");
-                return Center(child: Image.asset("assets/not_connect.png"));
-              }
-              else return ShowImage(data: data);
-            },
-          ),
-        )
+      ),
     );
-  }
-
-  Future<Null> refreshGallery() async {
-    refreshKey.currentState?.show();
-    await Future.delayed(Duration(milliseconds: 2500));
-
-    return null;
   }
 }
