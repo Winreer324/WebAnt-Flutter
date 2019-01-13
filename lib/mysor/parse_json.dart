@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:http/http.dart' as http;
-import 'package:webant_flutter/fetch_gallery.dart';
-import 'package:webant_flutter/item_gallery_list.dart';
+import 'package:webant_flutter/mysor/fetch_gallery.dart';
+import 'package:webant_flutter/mysor/item_gallery_list.dart';
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import './my_strings.dart';
+import 'package:webant_flutter/my_strings.dart';
 
 class MovieProdRepository implements FetchGallery {
   @override

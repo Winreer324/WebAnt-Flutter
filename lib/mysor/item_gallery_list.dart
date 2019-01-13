@@ -1,4 +1,4 @@
-import 'package:webant_flutter/item_gallery.dart';
+import 'package:webant_flutter/mysor/item_gallery.dart';
 
 class ItemGalleryList {
 

@@ -114,7 +114,6 @@ class PopularGalleryPageState extends State<PopularGallery> {
         child: FutureBuilder(
           future: makeRequest(connectUrl),
           builder: (context, snapshot) {
-//            if (!checkConnect(snapshot)) {
             if (snapshot.hasError) {
               return Center(child: Image.asset("assets/not_connect.png"));
             }  else return ShowImage(data: data, scrollController: _scrollController,);

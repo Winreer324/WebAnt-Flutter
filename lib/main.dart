@@ -79,4 +79,3 @@ class MyGalleryState extends State<MyGalleryPage> with SingleTickerProviderState
 
 // //todo мб переделать как тут https://flutter.io/docs/cookbook/networking/background-parsing
 // contact list пример
-// todo исправить и понять почему миллион запросов отправляется

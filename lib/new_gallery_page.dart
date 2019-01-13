@@ -37,11 +37,9 @@ class NewGalleryPageState extends State<NewGallery> {
   void initState(){
     super.initState();
     _scrollController.addListener((){
-//      print(_scrollController.position.pixels);
       if(_scrollController.position.pixels == _scrollController.position.maxScrollExtent){
         if(countP<2){
           moreImage();
-//            show=false;
           countP++;
         }
       }
@@ -91,26 +89,9 @@ class NewGalleryPageState extends State<NewGallery> {
   }
 
   moreImage()  {
-//    final response = await http
-//        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
-//
-//      print("more = "+response.body);
-//      var extractData = json.decode(response.body)["data"];
-//
-//      print("before data = ${data.toString()}");
-//      print("extractData = ${extractData.toString()}");
-
     setState(() {
-//        for(var val in data){
-//          print("data $val");
-////          data.add(val);
-//        }
-//      if(countP==2){lol = MyStrings.newGalleryUrlTwoPage;}
-//      if(countP==3){lol = MyStrings.newGalleryUrlThreePage;}
       lol = MyStrings.newGalleryUrlThreePage;
     });
-//      print("after data = ${data.toString()}");
-//      print(data.toString());
 
     ShowImage(data: data,scrollController: _scrollController,);
     print(data.length);
@@ -130,7 +111,6 @@ class NewGalleryPageState extends State<NewGallery> {
         child: FutureBuilder(
           future: makeRequest(lol),
           builder: (context, snapshot) {
-//          if (!checkConnect(snapshot)) {
             if (snapshot.hasError) {
               return Center(child: Image.asset("assets/not_connect.png"));
             }
